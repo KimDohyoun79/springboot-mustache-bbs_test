@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/articles")
@@ -51,6 +52,31 @@ public class ArticleController {
         List<Article> articles= articleRepository.findAll();
         model.addAttribute("articles", articles);
         return "list";
+    }
+
+    @GetMapping(value = "/{id}/edit")
+    public String edit(@PathVariable Long id, Model model) {
+        Optional<Article> optionalArticle = articleRepository.findById(id);
+        if(!optionalArticle.isEmpty()){
+            model.addAttribute("article", optionalArticle.get());
+            return "edit";
+        }
+        else{
+            model.addAttribute("massage", String.format("%d가 없습니다.", id));
+            return "error";
+        }
+    }
+    @PostMapping("/{id}/update")
+    public String update(@PathVariable Long id, ArticleDto articleDto, Model model) {
+        log.info("title:{} content:{}", articleDto.getTitle(), articleDto.getContent());
+        Article article = articleRepository.save(articleDto.toEntity());
+        model.addAttribute("article", article);
+        return String.format("redirect:/articles/%d", article.getId());
+    }
+    @GetMapping("/{id}/delete")
+    public String delete(@PathVariable Long id) {
+        articleRepository.deleteById(id);
+        return "redirect:/articles/list";
     }
 
 }
